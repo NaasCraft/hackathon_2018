@@ -1,17 +1,27 @@
 import React, { Component } from 'react';
-import { Alert, Grid } from 'react-bootstrap/lib';
+import {} from 'react-bootstrap/lib';
+import Start from './Start.jsx';
 
 /**
  * The toplevel application component to render as the root node.
  */
 class App extends Component {
-    state = {
+    state = { isGameStarted: false }
+
+    onStart = (values) => {
+        const state = Object.assign({}, values, { isGameStarted: true });
+        this.setState(state);
     }
 
     render() {
+        const { isGameStarted } = this.state;
+
         return (
             <div>
-                <p>hello world</p>
+                {isGameStarted ?
+                    (<div>game active!</div>) :
+                    (<Start onStart={this.onStart} />)
+                }
             </div>
         )
     }
