@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import request
-import mysql.connector
+
 app = Flask(__name__)
 
 
