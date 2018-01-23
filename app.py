@@ -49,7 +49,7 @@ def reserve_table(func):
     return wrapper
 
 
-def get_game(game_id: 'Union[str, int]'):
+def get_game(game_id):
     game = Game.query.get(int(game_id))
     if game is None:
         abort(404, {'error': 'No such game.'})
@@ -57,7 +57,7 @@ def get_game(game_id: 'Union[str, int]'):
     return game
 
 
-def compute_duration(game: Game):
+def compute_duration(game):
     if game.paused:
         return game.last_duration
     now = int(time.time())
@@ -72,7 +72,7 @@ def goal():
     json_data = request.get_json(force=True)
 
     goal_event = GoalEvent(
-        team=json_data['sensorID'],
+        sensor=json_data['sensorID'],
         timestamp=json_data['timestamp']
     )
     db_session.add(goal_event)
@@ -84,10 +84,9 @@ def goal():
 
     game = get_game(current_game)
 
-    if goal_event.team == '1':
+    if goal_event.sensor == 1:
         game.score_red += 1
-
-    elif goal_event.team == '2':
+    elif goal_event.sensor == 2:
         game.score_blue += 1
 
     db_session.commit()
@@ -108,8 +107,8 @@ def start():
         name=json_data['name'],
         score_red=0,
         score_blue=0,
-        team_red=json_data['team1'],
-        team_blue=json_data['team2'],
+        team_blue=json_data['team_blue'],
+        team_red=json_data['team_red'],
         max_goals=json_data.get('max_goals', None),
         start=int(time.time())
     )
@@ -167,7 +166,7 @@ def end(game_id):
 @app.route('/status/<game_id>', methods=['GET'])
 def status(game_id):
     game = get_game(game_id)
-    # TODO: add duration
+
     body = game.serialize()
     body.update({'duration': compute_duration(game)})
 
@@ -183,14 +182,14 @@ def update(game_id):
     json_data = request.get_json(force=True)
     game = get_game(game_id)
 
-    team = int(json_data['team'])
-    if team not in [1, 2]:
-        abort(400, "Unknown provided team (must be 1 or 2).")
+    team = json_data['team']
+    if team not in ['blue', 'red']:
+        abort(400, "Unknown provided team (must be 'red' or 'blue').")
         return
 
     difference = int(json_data['difference'])
-    game.score_red += difference if team == 1 else 0
-    game.score_blue += difference if team == 2 else 0
+    game.score_red += difference if team == 'red' else 0
+    game.score_blue += difference if team == 'blue' else 0
 
     db_session.commit()
     return app.response_class(
