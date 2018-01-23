@@ -8,9 +8,9 @@ import safeJSONParse from './safeJSONParse';
  * @param {Function} cd - The callback function.
  * @return {undefined}
  */
-function routeRequest(method, path, query, cb) {
+function routeRequest(method, path, body, cb) {
     request(method, path)
-        .query(query)
+        .send(body)
         .end((err, res) => {
             if (err) {
                 return cb(err);

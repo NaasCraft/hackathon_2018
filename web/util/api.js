@@ -4,15 +4,16 @@ import getAPIURL from './getAPIURL';
 const api = {
     /**
      * Initiate a new game.
-     * @param {Object} query - The query object with the technology information.
-     * @param {String} query.name - The name of the game.
-     * @param {String} query.team_1 - The name of the first team.
-     * @param {String} query.team_2 - The name of the second team.
+     * @param {Object} body - The body object with the technology information.
+     * @param {String} body.name - The name of the game.
+     * @param {String} body.team_red - The name of the first team.
+     * @param {String} body.team_blue - The name of the second team.
+     * @param {String} body.max_goals - The goals needed to win.
      * @param {Function} cb - The callback function.
      * @return {undefined}
      */
-    start(query, cb) {
-        return routeRequest('POST', `${getAPIURL()}/start`, query, cb);
+    start(body, cb) {
+        return routeRequest('POST', `${getAPIURL()}/start`, body, cb);
     },
 
     /**
@@ -22,7 +23,7 @@ const api = {
      * @return {undefined}
      */
     end(id, cb) {
-        return routeRequest('POST', `${getAPIURL()}/end/id`, query, cb);
+        return routeRequest('POST', `${getAPIURL()}/end/${id}`, {}, cb);
     },
 
     /**
@@ -32,7 +33,20 @@ const api = {
      * @return {undefined}
      */
     status(id, cb) {
-        return routeRequest('GET', `${getAPIURL()}/status/id`, query, cb);
+        return routeRequest('GET', `${getAPIURL()}/status/${id}`, {}, cb);
+    },
+
+    update(id, difference, team) {
+        const body = {
+            team,
+            difference,
+        }
+        return routeRequest('POST', `${getAPIURL()}/update/${id}`, body,
+            err => {
+                if (err) {
+                    return console.log(err);
+                }
+            });
     },
 };
 

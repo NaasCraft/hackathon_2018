@@ -8,7 +8,7 @@ function getAPIURL() {
         return process.env.API_ENDPOINT;
     }
     const { hostname, protocol } = window.location;
-    const port = 5000;
+    const port = 5444;
     const endpoint = `${hostname}:${port}`;
     return `${protocol}//${endpoint}`;
 }
