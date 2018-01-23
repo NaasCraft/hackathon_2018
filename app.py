@@ -57,6 +57,17 @@ def get_game(game_id):
     return game
 
 
+def get_all_games():
+    return Game.query.order_by(Game.id).all()
+
+
+def seriaze_multiple(games):
+    game_list = []
+    for g in games:
+        game_list.append(g.serialize())
+    return {'games':game_list}
+
+
 def compute_duration(game):
     if game.paused:
         return game.last_duration
@@ -196,6 +207,15 @@ def status_no_id():
         mimetype='application/json'
     )
 
+@app.route('/games', methods=['GET'])
+def games():
+    games = get_all_games()
+
+    return app.response_class(
+        response=json.dumps(seriaze_multiple(games)),
+        status=200,
+        mimetype='application/json'
+    )
 
 @app.route('/update/<game_id>', methods=['POST'])
 def update(game_id):
