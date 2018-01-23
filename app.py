@@ -4,11 +4,13 @@ import json
 import time
 
 from flask import Flask, request, abort
+from flask_cors import CORS
 
 from database import db_session, init_db
 from models import Game, GoalEvent
 
 app = Flask(__name__)
+CORS(app)
 
 HOST = '127.0.0.1'
 PORT = 5444
@@ -68,6 +70,13 @@ def seriaze_multiple(games):
     return {'games':game_list}
 
 
+def end_game(game):
+    game.last_duration = compute_duration(game)
+    game.end = int(time.time())
+
+    table.release()
+
+
 def compute_duration(game):
     if game.paused:
         return game.last_duration
@@ -99,6 +108,12 @@ def goal():
         game.score_red += 1
     elif goal_event.team == "2":
         game.score_blue += 1
+
+    if any(
+            score == game.max_goals
+            for score in (game.score_red, game.score_blue)
+    ):
+        end_game(game)
 
     db_session.commit()
 
@@ -162,10 +177,8 @@ def resume(game_id):
 @app.route('/end/<game_id>', methods=['POST'])
 def end(game_id):
     game = get_game(game_id)
-    game.last_duration = compute_duration(game)
-    game.end = int(time.time())
-
-    table.release()
+    end_game(game)
+    db_session.commit()
 
     return app.response_class(
         response=json.dumps(game.serialize()),
@@ -179,7 +192,12 @@ def status(game_id):
     game = get_game(game_id)
 
     body = game.serialize()
-    body.update({'duration': compute_duration(game)})
+    if game.end is not None:
+        duration = game.last_duration
+    else:
+        duration = compute_duration(game)
+
+    body.update({'duration': duration})
 
     return app.response_class(
         response=json.dumps(body),
