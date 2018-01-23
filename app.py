@@ -72,7 +72,7 @@ def goal():
     json_data = request.get_json(force=True)
 
     goal_event = GoalEvent(
-        sensor=json_data['sensorID'],
+        team=json_data['sensorID'],
         timestamp=json_data['timestamp']
     )
     db_session.add(goal_event)
@@ -84,9 +84,9 @@ def goal():
 
     game = get_game(current_game)
 
-    if goal_event.sensor == 1:
+    if goal_event.team == "1":
         game.score_red += 1
-    elif goal_event.sensor == 2:
+    elif goal_event.team == "2":
         game.score_blue += 1
 
     db_session.commit()
@@ -167,6 +167,26 @@ def end(game_id):
 def status(game_id):
     game = get_game(game_id)
 
+    body = game.serialize()
+    body.update({'duration': compute_duration(game)})
+
+    return app.response_class(
+        response=json.dumps(body),
+        status=200,
+        mimetype='application/json'
+    )
+
+
+@app.route('/status', methods=['GET'])
+def status_no_id():
+    current_game = table.get_game()
+    if current_game == None:
+        return app.response_class(
+            response=json.dumps({'message':'no current game'}),
+            status=200,
+            mimetype='application/json'
+        )
+    game = get_game(current_game)
     body = game.serialize()
     body.update({'duration': compute_duration(game)})
 
